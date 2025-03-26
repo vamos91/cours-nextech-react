@@ -1,5 +1,7 @@
 L’objectif est de renforcer la sécurité de notre application en contrôlant la navigation, afin de restreindre l’accès à certaines pages lorsque cela s’avère nécessaire.
 
+# Route Guard
+
 ### **Le composant PrivateRoute**
 
 ```javascript
@@ -41,6 +43,8 @@ Lorsque l'utilisateur essaie d'accéder à l'une de ces routes, React Router pas
 `PrivateRoute`
 Si l'utilisateur n'est pas authentifié, il est redirigé vers la page d'accueil
 
+# Not Found Page
+
 Une page "NotFound" est un outil essentiel pour gérer les erreurs de navigation de manière élégante, en aidant les utilisateurs à rester engagés avec votre site et en minimisant les impacts négatifs sur l'expérience utilisateur et le SEO.
 
 **Amélioration de l'Expérience Utilisateur**:
@@ -65,6 +69,8 @@ Une page "NotFound" est un outil essentiel pour gérer les erreurs de navigation
   <Route path="*" element={<NotFoundPage />} />
 </Routes>
 ```
+
+# Layout
 
 ### ==Qu’est-ce qu’un Layout en React ?==
 
@@ -160,6 +166,8 @@ function App() {
 
 export default App;
 ```
+
+# Utilisation Axios
 
 Axios est un client HTTP _[basé sur les promesses](https://fr.javascript.info/promise-basics)_ compatible avec node.js et les navigateurs.
 Il est _[isomorphique](https://www.lullabot.com/articles/what-is-an-isomorphic-application)_ (c’est à dire qu’il peut opérer dans le navigateur et dans node.js avec le même code).
