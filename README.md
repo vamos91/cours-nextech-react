@@ -271,3 +271,228 @@ export default function HomePage() {
   );
 }
 ```
+
+# Tandstack Query
+
+La doc de TanQuery -→ <https://tanstack.com/query/latest>
+
+1/ Installer TanQuery -→ `npm i @tanstack/react-query`
+
+2/ Installer QueryDevTool -→ `npm i @tanstack/react-query-devtools`
+
+3/ Wrapper App dans le main.tsx
+
+```typescript
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+import { BrowserRouter } from "react-router-dom";
+import { UserProvider } from "./hooks/contexts/user.context.tsx";
+
+// Importer le QueryClient et QueryClientProvider
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Instancier un new QueryClient
+const queryClient = new QueryClient();
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <UserProvider>
+          <App />
+        </UserProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+```
+
+4/ Ajouter la ReactQueryDevtools dans notre App.tsx afin d’avoir notre petit palmier ( =) ) :
+
+```typescript
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+function App() {
+  return (
+    <>
+      <Navbar />
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route element={<PrivateRoute />}>
+          <Route
+            path="/contact"
+            element={<ContactPage handleSubmitMessage={handleSubmitMessage} />}
+          />
+          <Route
+            path="/message"
+            element={<MessagePage messages={messages} />}
+          />
+          <Route path="/message/:idMessage" element={<MessageDetailPage />} />
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+
+      <ReactQueryDevtools />
+    </>
+  );
+}
+
+export default App;
+```
+
+5/ Utilisation de use Query dans notre page Home.tsx:
+
+```typescript
+import { getTodoById, getTodos, createTodo } from "../../services/api/todos";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+export interface Todo {
+  id: number;
+  title: string;
+  completed: boolean;
+  userId: number;
+}
+
+export default function HomePageUseQuery() {
+  const queryClient = useQueryClient();
+
+  // Pour faire des appels GET
+  const { data, isLoading, isError, refetch } = useQuery<Todo[]>({
+    // Ici nous donnons un id à notre requête
+    queryKey: ["todos"],
+    // Nous appelons la requête qui doit se trouver dans notre dossier api
+    queryFn: () => getTodos(),
+    // Le slateTime c'est le temps en ms que notre appel gardera en cache
+    // Si il est à 0, il n'y aura pas de cache, si nous ne mettons rien le cache durera 5 minutes
+    staleTime: 0,
+  });
+
+  // Pour faire des appels POST, PUT, PATCH, DELETE
+  const addTodo = useMutation({
+    // Le body correspond à dans la function addNewTodo
+    mutationFn: (body: Todo) => createTodo(body),
+    // newTodo correspond à la réponse rendu par l'api
+    onSuccess: (newTodo: Todo) => {
+      // Ici nous récupérons la valeur de todos de notre useQuery
+      const currentTodos: Todo[] = data || [];
+      // Nous faisons le push avec la nouvelle information
+      const updatedTodos = [...currentTodos, newTodo];
+      //  const updatedTodos = [...(data || []), newTodo];
+      // Ici nous ajoutons la liste actualisé
+      queryClient.setQueryData(["todos"], updatedTodos);
+    },
+    // gestion des erreurs
+    onError: (error: any) => {
+      console.error("Erreur", error);
+      alert("Erreur lors de l’ajout de la Todo");
+    },
+  });
+
+  async function addNewTodo() {
+    const body: Todo = {
+      id: 201,
+      title: "Test",
+      completed: true,
+      userId: 1,
+    };
+    // Pour éxecuter la mutation
+    addTodo.mutate(body);
+  }
+
+  // Version sans le useMutation
+  async function addNewTodo2() {
+    const body: Todo = {
+      id: 201,
+      title: "Test",
+      completed: true,
+      userId: 1,
+    };
+
+    const newTodo = await createTodo(body);
+    const currentTodos: Todo[] = data || [];
+    const updatedTodos = [...currentTodos, newTodo.body];
+    queryClient.setQueryData(["todos"], updatedTodos);
+  }
+
+  async function getTodoDetail(id: number) {
+    try {
+      const detailTodo = await getTodoById(id);
+      console.log(detailTodo);
+    } catch (err) {
+      // Géstion des erreurs
+    }
+  }
+
+  return (
+    <>
+      <h1> Page d'accueil </h1>
+
+      <button onClick={addNewTodo}> Ajouter une Todo </button>
+
+      {isLoading && <span>Loading...</span>}
+      {isError && <span>Erreur</span>}
+      {data &&
+        data?.map((todo: Todo) => (
+          <div key={todo.id}>
+            - {todo.title} --
+            <button onClick={() => getTodoDetail(todo.id)}>
+              {" "}
+              Log le detail{" "}
+            </button>
+          </div>
+        ))}
+    </>
+  );
+}
+```
+
+6/ Mes appels de l’api
+
+```typescript
+import axios from "axios";
+import { Todo } from "../../pages/Home/HomePageUseQuery";
+/* Methode */
+
+// GET
+// POST
+// PUT
+// PATCH
+// DELETE
+
+export async function getTodos() {
+  try {
+    const { data } = await axios.get(
+      "https://jsonplaceholder.typicode.com/todos"
+    );
+    return data;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+export async function getTodoById(id: number) {
+  try {
+    const { data } = await axios.get(
+      `https://jsonplaceholder.typicode.com/todos/${id}`
+    );
+    return data;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+
+export async function createTodo(body: Todo) {
+  try {
+    const { data } = await axios.post(
+      `https://jsonplaceholder.typicode.com/todos`,
+      { body }
+    );
+    return data.body;
+  } catch (error: any) {
+    throw new Error(error);
+  }
+}
+```
