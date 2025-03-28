@@ -630,7 +630,8 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
 4. **Interface utilisateur** :
    - Page d'accueil avec une barre de recherche pour trouver des morceaux.
    - Page de profil avec les playlists et les morceaux favoris.
-   - Lecteur de musique intégré avec une interface pour lire, mettre en pause, et naviguer entre les morceaux.
+   - Lecteur de musique intégré avec une interface pour lire, mettre en pause,
+   - Bonus : naviguer entre les morceaux.
 
 ---
 
@@ -641,10 +642,6 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
    - Créez un dossier server pour le back-end.
    - Initialisez un projet Node.js dans ce dossier :
 
-     ```javascript
-     bash;
-     ```
-
      Copier
 
      ```javascript
@@ -653,10 +650,6 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
      ```
 
    - Installez les dépendances nécessaires :
-
-     ```javascript
-     bash;
-     ```
 
      Copier
 
@@ -667,13 +660,7 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
 
 2. **Initialisation de Prisma** :
 
-   - Exécutez la commande suivante pour initialiser Prisma :
-
-     ```javascript
-     bash;
-     ```
-
-     Copier
+   - Exécutez la commande suivante pour initialiser Prisma :Copier
 
      ```javascript
      npx prisma init
@@ -735,10 +722,6 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
    ```
 
    Ensuite, générez et appliquez la migration pour créer les tables dans votre base de données :
-
-   ```javascript
-   bash;
-   ```
 
    Copier
 
@@ -877,7 +860,7 @@ L'application doit permettre de réaliser les fonctionnalités suivantes :
      Copier
 
      ```javascript
-     npx create-react-app client
+     npm create vite@latest
 
      ```
 
