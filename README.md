@@ -496,3 +496,409 @@ export async function createTodo(body: Todo) {
   }
 }
 ```
+
+# Hook : useContext
+
+Le hook useContext en React est un outil très utile pour accéder aux données d'un contexte. Un contexte, créé à l'aide de createContext, permet de partager des données à travers l'arbre des composants sans avoir à les passer explicitement à chaque niveau via des props.
+
+##
+
+I) **Création du userContext**
+
+```typescript
+import { createContext, useState, ReactNode } from "react";
+
+// On crée d'abord le type pour le contexte utilisateur
+interface UserContextType {
+  user: string;
+  updateUser: (username: string) => void;
+}
+
+// Le type "ReactNode" est utilisé pour représenter tout ce qui peut être rendu dans React
+interface UserProviderType {
+  children: ReactNode;
+}
+
+// On initialise le contexte avec un type UserContextType ou undefined
+// (le contexte peut être initialisé à vide)
+const UserContext = createContext<UserContextType>({
+  user: "",
+  updateUser: () => {},
+});
+
+export function UserProvider({ children }: UserProviderType) {
+  const [user, setUser] = useState<string>("");
+
+  function updateUser(username: string) {
+    console.log("coucou context");
+    setUser(username);
+  }
+
+  return (
+    /*  Ce composant spécial permet de fournir la valeur user et la fonction updateUser 
+        à tous les composants descendants de UserProvider qui consomment ce contexte. */
+
+    <UserContext.Provider value={{ user, updateUser }}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+export default UserContext;
+```
+
+##
+
+2. **Wrapper le App**
+
+Pour que App puisse hériter des fonctionnalités de UserProvider nous devons le wrapper avec ce dernier
+
+```typescript
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
+import { BrowserRouter } from "react-router-dom";
+import { UserProvider } from "./hooks/contexts/user.context.tsx";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <UserProvider>
+        <App />
+      </UserProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+```
+
+##
+
+**3) Utilisation du contexte dans les pages**
+
+```typescript
+export default function HomePage() {
+  const [title, setTitle] = useState<any>("");
+  const [todos, setTodos] = useState<any>([]);
+
+  const { user, updateUser } = useContext(UserContext);
+
+  return (
+    <>
+      <h1> Home Page</h1>
+
+      <p> Ceci est la page d'accueil</p>
+
+      <p> {user} </p>
+
+      <button onClick={submitMessage}> Test du useContext </button>
+    </>
+  );
+}
+```
+
+# Projet Deezer
+
+### Exercice Fullstack React, Express et Prisma pour Développeur Confirmé : **Clone de Deezer**
+
+#### Objectifs :
+
+Créer un clone fonctionnel de l'application **Deezer** en utilisant **React** pour le front-end, **Express** pour le back-end, et **Prisma** pour la gestion de la base de données. L'application doit permettre à un utilisateur de rechercher de la musique, de lire des morceaux, d'ajouter des morceaux à une playlist, et de gérer sa propre bibliothèque musicale.
+
+#### Technologies utilisées :
+
+- **Front-end** : React (avec React Router pour la navigation et Axios pour les appels API).
+- **Back-end** : Express (pour créer une API RESTful).
+- **Base de données** : Prisma avec une base de données relationnelle (comme PostgreSQL ou MySQL).
+- **Authentification** : JWT (JSON Web Tokens) pour la gestion de la session utilisateur.
+
+#### Spécifications de l'application :
+
+L'application doit permettre de réaliser les fonctionnalités suivantes :
+
+1. **Gestion des utilisateurs** :
+   - Inscription et connexion via JWT.
+   - Affichage du profil utilisateur avec ses playlists et morceaux favoris.
+2. **Gestion des morceaux de musique** :
+   - Recherche de morceaux (utilisation d'une API tierce comme l'API Deezer ou une base de données simulée).
+   - Lecture en streaming de morceaux de musique (via une API externe comme Deezer ou en simulant un lecteur audio).
+   - Affichage de la liste des morceaux avec leurs informations (titre, artiste, album, etc.).
+3. **Playlists et favoris** :
+   - Création de playlists personnelles.
+   - Ajout, suppression de morceaux à une playlist.
+   - Ajout de morceaux aux favoris.
+4. **Interface utilisateur** :
+   - Page d'accueil avec une barre de recherche pour trouver des morceaux.
+   - Page de profil avec les playlists et les morceaux favoris.
+   - Lecteur de musique intégré avec une interface pour lire, mettre en pause, et naviguer entre les morceaux.
+
+---
+
+### Étape 1 : Création du Back-End avec Express et Prisma
+
+1. **Initialisation du projet Express** :
+
+   - Créez un dossier server pour le back-end.
+   - Initialisez un projet Node.js dans ce dossier :
+
+     ```javascript
+     bash;
+     ```
+
+     Copier
+
+     ```javascript
+     npm init -y
+
+     ```
+
+   - Installez les dépendances nécessaires :
+
+     ```javascript
+     bash;
+     ```
+
+     Copier
+
+     ```javascript
+     npm install express prisma @prisma/client jsonwebtoken bcryptjs cors body-parser
+
+     ```
+
+2. **Initialisation de Prisma** :
+
+   - Exécutez la commande suivante pour initialiser Prisma :
+
+     ```javascript
+     bash;
+     ```
+
+     Copier
+
+     ```javascript
+     npx prisma init
+
+     ```
+
+   - Configurez votre base de données dans le fichier .env. Par exemple, pour Mysql :
+
+     Copier
+
+     ```javascript
+     DATABASE_URL = "mysql://user:password@localhost:5432/deezer_clone";
+     ```
+
+3. **Schéma de la base de données** : Dans prisma/schema.prisma, définissez les modèles pour les utilisateurs, morceaux, et playlists :
+
+   ```javascript
+   prisma;
+   ```
+
+   Copier
+
+   ```javascript
+   datasource db {
+     provider = "mysql"
+     url      = env("DATABASE_URL")
+   }
+
+   generator client {
+     provider = "prisma-client-js"
+   }
+
+   model User {
+     id        Int       @id @default(autoincrement())
+     email     String    @unique
+     password  String
+     playlists Playlist[]
+     favorites Track[]
+   }
+
+   model Track {
+     id        Int       @id @default(autoincrement())
+     title     String
+     artist    String
+     album     String
+     url       String
+     playlists Playlist[]
+     users     User[]    @relation("FavoriteTracks")
+   }
+
+   model Playlist {
+     id        Int       @id @default(autoincrement())
+     name      String
+     userId    Int
+     user      User      @relation(fields: [userId], references: [id])
+     tracks    Track[]
+   }
+
+   ```
+
+   Ensuite, générez et appliquez la migration pour créer les tables dans votre base de données :
+
+   ```javascript
+   bash;
+   ```
+
+   Copier
+
+   ```javascript
+   npx prisma migrate dev --name init
+   npx prisma generate
+
+   ```
+
+4. **Création des routes API avec Express** :
+
+   - **Authentification** : Créez des routes pour l'inscription et la connexion des utilisateurs avec JWT.
+
+     Copier
+
+     ```javascript
+     // server/routes/auth.js
+     const express = require("express");
+     const bcrypt = require("bcryptjs");
+     const jwt = require("jsonwebtoken");
+     const prisma = require("../prismaClient");
+
+     const router = express.Router();
+
+     // Inscription
+     router.post("/register", async (req, res) => {
+       const { email, password } = req.body;
+       const hashedPassword = await bcrypt.hash(password, 10);
+       try {
+         const user = await prisma.user.create({
+           data: { email, password: hashedPassword },
+         });
+         res.status(201).json({ message: "User registered successfully" });
+       } catch (error) {
+         res.status(500).json({ message: "Error registering user" });
+       }
+     });
+
+     // Connexion
+     router.post("/login", async (req, res) => {
+       const { email, password } = req.body;
+       const user = await prisma.user.findUnique({ where: { email } });
+       if (!user)
+         return res.status(400).json({ message: "Invalid credentials" });
+
+       const isPasswordCorrect = await bcrypt.compare(password, user.password);
+       if (!isPasswordCorrect)
+         return res.status(400).json({ message: "Invalid credentials" });
+
+       const token = jwt.sign({ userId: user.id }, "secret", {
+         expiresIn: "1h",
+       });
+       res.json({ token });
+     });
+
+     module.exports = router;
+     ```
+
+   - **Gestion des morceaux et playlists** : Créez des routes pour gérer les morceaux, les playlists, et les favoris.
+
+     Copier
+
+     ```javascript
+     // server/routes/playlist.js
+     const express = require("express");
+     const jwt = require("jsonwebtoken");
+     const prisma = require("../prismaClient");
+
+     const router = express.Router();
+
+     // Middleware pour vérifier le JWT
+     const authenticate = (req, res, next) => {
+       const token = req.header("Authorization");
+       if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+       jwt.verify(token, "secret", (err, decoded) => {
+         if (err) return res.status(401).json({ message: "Unauthorized" });
+         req.userId = decoded.userId;
+         next();
+       });
+     };
+
+     // Ajouter un morceau à une playlist
+     router.post("/:playlistId/tracks", authenticate, async (req, res) => {
+       const { playlistId } = req.params;
+       const { trackId } = req.body;
+       const track = await prisma.track.findUnique({ where: { id: trackId } });
+       const playlist = await prisma.playlist.update({
+         where: { id: parseInt(playlistId) },
+         data: {
+           tracks: {
+             connect: { id: track.id },
+           },
+         },
+       });
+       res.json(playlist);
+     });
+
+     module.exports = router;
+     ```
+
+5. **Démarrer le serveur Express** : Créez un fichier server.js pour configurer et démarrer le serveur Express.
+
+   Copier
+
+   ```javascript
+   // server/server.js
+   const express = require("express");
+   const cors = require("cors");
+   const bodyParser = require("body-parser");
+   const authRoutes = require("./routes/auth");
+   const playlistRoutes = require("./routes/playlist");
+
+   const app = express();
+   const port = 5000;
+
+   app.use(cors());
+   app.use(bodyParser.json());
+   app.use("/auth", authRoutes);
+   app.use("/playlists", playlistRoutes);
+
+   app.listen(port, () => {
+     console.log(`Server running on http://localhost:${port}`);
+   });
+   ```
+
+---
+
+### Étape 2 : Création du Front-End avec React
+
+1. **Initialisation de l'application React** :
+
+   - Créez un dossier client pour l'application React.
+   - Initialisez une application React avec create-react-app :
+
+     Copier
+
+     ```javascript
+     npx create-react-app client
+
+     ```
+
+   - Installez les dépendances nécessaires :
+
+     Copier
+
+     ```javascript
+     npm install axios react-router-dom
+
+     ```
+
+2. **Gestion des routes et authentification** : Utilisez **React Router** pour la navigation entre les pages (inscription, connexion, profil utilisateur, recherche de musique).
+3. **Création des composants React** :
+   - **Composant de recherche de musique** : Utilisez Axios pour interagir avec une API (Deezer API ou une API personnalisée).
+   - **Composant de lecteur de musique** : Créez un lecteur intégré avec des contrôles pour lire, mettre en pause, et naviguer entre les morceaux.
+   - **Composant de gestion des playlists** : Permet à l'utilisateur d'ajouter, supprimer des morceaux dans ses playlists et d'ajouter des morceaux aux favoris.
+4. **Gestion de l'état global** : Utilisez **React Context API** ou **Redux** pour gérer l'état global de l'application, en particulier pour les utilisateurs, playlists, et morceaux favoris.
+
+---
+
+### Conclusion :
+
+L'exercice consiste à développer un **clone de Deezer** en utilisant **React**, **Express**, et **Prisma**. Vous devez créer une API complète avec gestion des utilisateurs, playlists, morceaux de musique et favoris, et intégrer cette API avec un front-end React interactif. Cette application comprendra également l'authentification via JWT et l'intégration avec une base de données relationnelle via Prisma.
